@@ -1,6 +1,9 @@
 .*
 !.gitignore
 
+# Project byproducts
+podcast_llama.egg-info/
+
 # Python  byproducts
 __pycache__/
 test*.ipynb
@@ -9,6 +12,9 @@ test*.ipynb
 # ignore voice clones assets
 tests/
 src/tests/
+
+data/stories/
+data/voices/
 
 *.parquet
 *.map
