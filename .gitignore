@@ -1,6 +1,5 @@
 .*
 !.gitignore
-!*.vim # allow vim sessions to be pushed
 
 # Project byproducts
 podcast_llama.egg-info/
