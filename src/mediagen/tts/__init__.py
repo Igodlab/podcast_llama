@@ -15,11 +15,14 @@ from .tts_utils import (
 )
 
 __all__ = [
-    # "TTSservice",
+    "Audio",
     "Speaker",
     "SpeakerText",
-    "Audio",
     "load_txt",
-    "torch_concat",
     "save_to_path",
+    "torch_concat",
+    # "TTSservice",
 ]
+
+# Please keep this list sorted
+assert __all__ == sorted(__all__)
