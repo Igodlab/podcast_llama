@@ -4,9 +4,10 @@ import asyncio
 import torch
 from torchaudio import load as _torchaudioLoad
 
-from .voices import VOICE_ARTISTS
+from .audio_utils import VOICE_ARTISTS
 from ..model_manager import TTSModel
 from mediagen.tts.tts_utils import Audio
+from mediagen.utils import get_device
 
 from typing import override, Any
 from pathlib import Path
@@ -18,22 +19,21 @@ __all__ = [
 class ZonosModelLocal(TTSModel):
     def __init__(self, model_name: str = "Zyphra/Zonos-v0.1-transformer"):
         self.model_name: str = model_name
-        self.device: torch.device = self._get_device()
+        self.device: torch.device = get_device()
         self.speaker_embeddings: dict[str, torch.Tensor] = {}
         self._zonos_model: Any = None
         self._loading_lock = asyncio.Lock()
 
-    def _get_device(self) -> torch.device:
-        if torch.cuda.is_available():
-            return torch.device(torch.cuda.current_device())
-        return torch.device("cpu")
-    
     @override
     async def load(self) -> None:
         async with self._loading_lock:
             if self._zonos_model is None:
                 # Import only when needed
                 from zonos.model import Zonos
+                from zonos.conditioning import make_cond_dict
+
+                self.import_zonos = Zonos
+                self.import_cond_dict = make_cond_dict
                 
                 # HACK: converting to str fixes the forward NotImplementedError in asyncio.to_thread()
                 # In `zonos/model.py`, device argument type hint is marked as str but should be torch.device
@@ -41,7 +41,7 @@ class ZonosModelLocal(TTSModel):
 
                 # Run in thread pool to avoid blocking
                 self._zonos_model = await asyncio.to_thread(
-                    Zonos.from_pretrained,
+                    self.import_zonos.from_pretrained,
                     self.model_name,
                     device=device_str
                 )
@@ -61,7 +61,7 @@ class ZonosModelLocal(TTSModel):
     @property
     def zonos_model(self):
         if not self.is_loaded:
-            raise RuntimeError("Model not loaded. Call await model.load() first.")
+            raise RuntimeError("Text-to-speech model not loaded. Call `await model.load()` first.")
         return self._zonos_model
 
     @override
@@ -82,7 +82,7 @@ class ZonosModelLocal(TTSModel):
         else:
             # Load and embed voice sample
             voice: Audio = Audio(*_torchaudioLoad(audio_path))
-            embedding: torch.Tensor = self.zonos_model.make_speaker_embedding(voice.wavtensor, voice.srate)
+            embedding: torch.Tensor = self.zonos_model.make_speaker_embedding(voice.wav, voice.srate)
             torch.cuda.empty_cache() # TODO: validate if empty_cache is useful here
             return embedding
 
@@ -96,11 +96,8 @@ class ZonosModelLocal(TTSModel):
     @override
     def run_model(self, voice_id: str, text: str) -> Audio:
         """Access a speaker_embedding and produce audio for the desired text"""
-        # Import conditioning function
-        from zonos.conditioning import make_cond_dict
-
         # Generate audio using shared model
-        cond_dict: dict[str, Any] = make_cond_dict(text=text, speaker=self._get_speaker_embedding(voice_id))
+        cond_dict: dict[str, Any] = self.import_cond_dict(text=text, speaker=self._get_speaker_embedding(voice_id))
         conditioning: torch.Tensor = self.zonos_model.prepare_conditioning(cond_dict)
         codes = self.zonos_model.generate(conditioning)
         wavs: torch.Tensor = self.zonos_model.autoencoder.decode(codes).cpu()

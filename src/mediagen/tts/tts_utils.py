@@ -1,5 +1,10 @@
 import torch
+from subprocess import run, CalledProcessError
 from torchaudio import save as _torchaudioSave
+
+from numpy import floating
+from numpy.typing import NDArray
+from typing import Any
 
 from pathlib import Path
 from dataclasses import dataclass
@@ -14,7 +19,7 @@ __all = [
 
 @dataclass
 class Audio:
-    wavtensor: torch.Tensor
+    wav: torch.Tensor | NDArray[floating[Any]]
     srate: int
 
 # >>> load_txt - from Path >>>
@@ -32,7 +37,7 @@ def torch_concat(
     audio_segments: list[Audio],
     output_path: Path | str | None = None,
 ) -> Audio:
-    tensors = [seg.wavtensor for seg in audio_segments]
+    tensors = [seg.wav for seg in audio_segments]
     concatenated = torch.cat(tensors, dim=1)
     sample_rate = audio_segments[0].srate
     
@@ -80,7 +85,7 @@ def save_to_path(
                 full_path_file: Path = full_path / fname
 
     # Fix the torch.save call - should be _torchaudioSave
-    _torchaudioSave(full_path_file, voice.wavtensor, voice.srate)
+    _torchaudioSave(full_path_file, voice.wav, voice.srate)
 
     _print_output = f"Audio file saved at: {full_path_file}"
     print(_print_output)

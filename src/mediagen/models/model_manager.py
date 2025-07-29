@@ -1,4 +1,3 @@
-# src/mediagen/models/model_manager.py
 import asyncio
 import time
 
@@ -43,6 +42,36 @@ class TTSModel(ABC):
     def run_model(self, voice_id: str, text: str) -> Audio:
         """Run TTS model either with an API or locally"""
         pass
+
+class Subs(ABC):
+    """Absract base class for transcript/subtitle models"""
+
+    @abstractmethod
+    async def load(self) -> None:
+        """Load the model asynchronously"""
+        pass
+    
+    @abstractmethod
+    def unload(self) -> None:
+        """Unload model and free memory"""
+        pass
+
+    @property
+    @abstractmethod
+    def is_loaded(self) -> bool:
+        """Check if model is loaded"""
+        pass
+
+    @abstractmethod
+    def prep_model(self, audio_path: Path | str) -> Audio:
+        """Prep trasncript plus timestampt model"""
+        pass
+
+    @abstractmethod
+    def run_model(self, audio: Audio):
+        """Run transcript model"""
+        pass
+
 
 # >>> ModelManager >>>
 # HACK: ModelManager is a must-have intermediary to load TTS models
@@ -133,6 +162,18 @@ class ModelManager:
         model = self.get_model(category, model_name)
         return model.run_model(voice_id=voice_id, text=text)
     # <<< prep & run TTSModel <<<
+
+    # >>> Subtitles >>>
+    def prep_subs(self, model_name: str, audio_path: Path | str) -> Audio:
+        category = "video"
+        model = self.get_model(category, model_name)
+        return model.prep_model(audio_path=audio_path)
+
+    def run_subs(self, model_name: str, audio: Audio):
+        category = "video"
+        model = self.get_model(category, model_name)
+        return model.run_model(audio)
+    # <<< Subtitles <<<
     
     # PERF: tested, works nice
     def get_memory_usage(self) -> dict[str, Any]:

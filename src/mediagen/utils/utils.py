@@ -1,3 +1,4 @@
+import torch
 from pathlib import Path
 import warnings
 
@@ -13,10 +14,19 @@ except LookupError:
 
 
 __all__ = [
-    "split_text_balanced",
-    "split_long_sentence",
     "analyze_chunks",
+    "split_long_sentence",
+    "split_text_balanced",
+    "get_device",
 ]
+
+# >>> get device >>>
+def get_device() -> torch.device:
+    if torch.cuda.is_available():
+        return torch.device(torch.cuda.current_device())
+    return torch.device("cpu")
+# <<< get device <<<
+    
 
 # >>> Split text balanced >>>
 def split_text_balanced(text: str, max_length: int = 300, target_length: int | None = None) -> list[str]:

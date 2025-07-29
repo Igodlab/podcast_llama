@@ -1,11 +1,13 @@
 from .utils import (
-    split_text_balanced,
-    split_long_sentence,
     analyze_chunks,
+    split_long_sentence,
+    split_text_balanced,
+    get_device,
 )
 
 __all__ = [
-    "split_text_balanced",
-    "split_long_sentence",
     "analyze_chunks",
+    "split_long_sentence",
+    "split_text_balanced",
+    "get_device",
 ]
