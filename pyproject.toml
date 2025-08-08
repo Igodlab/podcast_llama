@@ -9,7 +9,6 @@ dependencies = [
     "asyncio",
     "catppuccin-jupyterlab",
     "gradio>=5.15.0",
-    # "huggingface-hub>=0.28.1",     # csm-1b
     "huggingface-hub>=0.33.4", # csm-1b
     "inflect>=7.5.0",
     "ipywidgets", # install this because of jupyterlab warning
@@ -17,7 +16,7 @@ dependencies = [
     "kanjize>=1.5.0",
     "manim", # manim for text for video stuff
     # "librosa==0.10.2.post1",
-    # "moshi>=0.2.2", # csm-1b
+    "moshi>=0.2.2", # csm-1b
     "nltk", # string processing
     "numpy>=2.2.2", # avoid incompatibility, comment numba==0.61.0 and numpy>=2.1.3
     "packaging",
@@ -33,7 +32,7 @@ dependencies = [
     "torchao>=0.9.0",
     "torchaudio>=2.4.0", # csm-1b
     "torchtune>=0.4.0", # csm-1b
-    "transformers @ git+https://github.com/huggingface/transformers@v4.54.0",
+    "transformers",
     "uv-sort",
     "whisper_timestamped",
     "zonos @ git+https://github.com/Zyphra/Zonos@main", # zonos-v0.1-transformer
